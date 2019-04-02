@@ -1,59 +1,80 @@
-import time
-import psutil
 import datetime
-import tkinter as tk
+import time
 from tkinter import *
+import psutil
+from apscheduler.schedulers.blocking import BlockingScheduler
+
 
 class Monitor:
+    sched = BlockingScheduler()
     startTime = None
     endTime = None
     running = False
     win = None
-    
-    def __init__(self):
-        self.gui()
-        
-    def gui(self):
-        global win, startTime, running
-        win = tk.Tk()
-        win.title("Logan's Bandwidth Monitor")
-        win.geometry("300x100")
-        startBtn = Button(win, text = 'Start Monitoring', command = self.start)
-        startBtn.pack()
-        
-        stopBtn = Button(win, text = 'Stop Monitoring', command = self.stopRunning)
-        stopBtn.pack()
-        
-        resetBtn = Button(win, text = "Reset", command = self.reset)
-        resetBtn.pack()
-        
-        runStatus = Label(win, text = "Running?: " + running)
-        runStatus.pack()
-        
-        startStatus = Label(win, text = "Start Time: " + startTime)
-        startStatus.pack()
-        
-        return win
-    
+
+    def __init__(self, master):
+        self.gui(master)
+
+    def gui(self, master):
+        self.win = master
+        self.win.title("Logan's Bandwidth Monitor")
+        self.win.geometry("300x200")
+        start_btn = Button(self.win, text='Start Monitoring', command=self.start)
+        start_btn.pack()
+
+        stop_btn = Button(self.win, text='Stop Monitoring', command=self.stoprunning)
+        stop_btn.pack()
+
+        reset_btn = Button(self.win, text="Reset", command=self.reset)
+        reset_btn.pack()
+
+        run_status = Label(self.win, text="Running?: " + str(self.running))
+        run_status.pack()
+
+        start_status = Label(self.win, text="Start Time: " + str(self.startTime))
+        start_status.pack()
+
     def start(self):
         print("started")
-        self.startRunning()
+        self.startrunning()
         self.main()
-        
+
     def main(self):
         print("main")
-        
-    def startRunning(self):
-        global running
-        running = True
-        print(running)
-        return running
-    
-    def stopRunning(self):
-        global running
-        running = False
-        return running
-    
+        try:
+            print("run")
+            interval = 0
+            print(self.running)
+            while self.running:
+                print("running")
+                args = self.poll(interval)
+                print(args)
+                self.refresh(*args)
+                interval = 1
+        except (KeyboardInterrupt, SystemExit):
+            pass
+
+    def poll(self, interval):
+        tot_before = psutil.net_io_counters()
+        pnic_before = psutil.net_io_counters(pernic=True)
+        # sleep some time
+        time.sleep(interval)
+        tot_after = psutil.net_io_counters()
+        pnic_after = psutil.net_io_counters(pernic=True)
+        return tot_before, tot_after, pnic_before, pnic_after
+
+    def refresh(self, tot_before, tot_after, pnic_before, pnic_after):
+        print("refresh")
+
+    def printout(self):
+        print("print")
+
+    def startrunning(self):
+        self.running = True
+
+    def stoprunning(self):
+        self.running = False
+
     def reset(self):
         global startTime, endTime, running, win
         startTime = None
@@ -61,15 +82,30 @@ class Monitor:
         running = False
         win = None
         return startTime, endTime, running, win
-        
-    def updateStart(self):
+
+    def updatestart(self):
         global startTime
         startTime = datetime.datetime.now()
         return startTime
-        
+
     def end(self):
         global startTime
-        endTime = datetime.datetime.now()
-        print(endTime)
+        end_time = datetime.datetime.now()
+        print(end_time)
         print(startTime)
-Monitor()
+
+    def bytes2human(self, n):
+        symbols = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
+        prefix = {}
+        for i, s in enumerate(symbols):
+            prefix[s] = 1 << (i + 1) * 10
+        for s in reversed(symbols):
+            if n >= prefix[s]:
+                value = float(n) / prefix[s]
+                return '%.2f %s' % (value, s)
+        return '%.2f B' % n
+
+
+root = Tk()
+monitor = Monitor(root)
+root.mainloop()
