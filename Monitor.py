@@ -3,7 +3,14 @@ import time
 from tkinter import *
 import psutil
 from apscheduler.schedulers.blocking import BlockingScheduler
+'''
+TODO:
+change running boolean to python event: https://stackoverflow.com/questions/5114292/break-interrupt-a-time-sleep-in-python
+make Tkinter gui update somehow to reflect changes in network activity and updated start time and running status
+output results to file every week
+make per second readings optional?
 
+'''
 
 class Monitor:
     sched = BlockingScheduler()
