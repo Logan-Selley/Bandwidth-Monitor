@@ -1,5 +1,4 @@
 import datetime
-import time
 from tkinter import *
 import psutil
 from apscheduler.schedulers.blocking import BackgroundScheduler
@@ -72,6 +71,7 @@ class Monitor:
         except (KeyboardInterrupt, SystemExit):
             pass
 
+    ''' function sourced from https://github.com/giampaolo/psutil/blob/master/scripts/nettop.py'''
     def poll(self, interval):
         tot_before = psutil.net_io_counters()
         pnic_before = psutil.net_io_counters(pernic=True)
