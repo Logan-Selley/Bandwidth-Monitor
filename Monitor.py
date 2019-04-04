@@ -23,6 +23,10 @@ class Monitor:
     exit = Event()
     win = None
     job = None
+    weeklyup = 0
+    weeklydown = 0
+    totalup = 0
+    totaldown = 0
 
     def __init__(self, master):
         self.job = self.sched.add_job(self.printout, 'interval', days=7)
@@ -63,7 +67,7 @@ class Monitor:
                 print("running")
                 args = self.poll(interval)
                 print(args)
-                self.refresh(*args)
+                self.update(*args)
                 interval = 1
         except (KeyboardInterrupt, SystemExit):
             pass
@@ -75,14 +79,18 @@ class Monitor:
         self.exit.wait(interval)
         tot_after = psutil.net_io_counters()
         pnic_after = psutil.net_io_counters(pernic=True)
-        return tot_before, tot_after, pnic_before, pnic_after
+        return tot_before, tot_after, pnic_before, pnic_after, interval
 
-    def refresh(self, tot_before, tot_after, pnic_before, pnic_after):
+    def update(self, tot_before, tot_after, pnic_before, pnic_after, interval):
         print("refresh")
 
     def printout(self):
         print("print")
-        file = open(datetime.datetime.now(), "w")
+        file = open(str(datetime.datetime.now()), "w")
+        file.write("Week's Download: " + self.bytes2human(self.weeklydown))
+        file.write("Week's Upload: " + self.bytes2human(self.weeklyup))
+        self.weeklydown = 0
+        self.weeklyup = 0
         ''' write weekly variables'''
         ''' think about changing output based on run status'''
         file.close()
@@ -91,14 +99,21 @@ class Monitor:
     def startrunning(self):
         self.exit.clear()
         self.job.resume()
+        self.weeklyup = 0
+        self.weeklydown = 0
+        self.totaldown = 0
+        self.totalup = 0
         self.running = True
 
     def stoprunning(self):
         self.exit.set()
         self.job.pause()
+        self.exitprint()
         self.running = False
 
     def exitprint(self):
+        print("exit print")
+        '''total'''
 
     def reset(self):
         global startTime, endTime, running, win
