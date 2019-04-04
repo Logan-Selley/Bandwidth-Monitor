@@ -22,8 +22,11 @@ class Monitor:
     running = False
     exit = Event()
     win = None
+    job = None
 
     def __init__(self, master):
+        self.job = self.sched.add_job(self.printout, 'interval', days=7)
+        self.job.pause()
         self.gui(master)
 
     def gui(self, master):
@@ -48,7 +51,6 @@ class Monitor:
     def start(self):
         print("started")
         self.startrunning()
-        self.sched.add_job(self.printout, 'interval', days=7)
         self.main()
 
     def main(self):
@@ -88,11 +90,15 @@ class Monitor:
 
     def startrunning(self):
         self.exit.clear()
+        self.job.resume()
         self.running = True
 
     def stoprunning(self):
         self.exit.set()
+        self.job.pause()
         self.running = False
+
+    def exitprint(self):
 
     def reset(self):
         global startTime, endTime, running, win
