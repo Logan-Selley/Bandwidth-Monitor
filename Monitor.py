@@ -2,21 +2,25 @@ import datetime
 import time
 from tkinter import *
 import psutil
-from apscheduler.schedulers.blocking import BlockingScheduler
+from apscheduler.schedulers.blocking import BackgroundScheduler
+''' Event code from https://stackoverflow.com/questions/5114292/break-interrupt-a-time-sleep-in-python'''
+from threading import Event
 '''
 TODO:
 change running boolean to python event: https://stackoverflow.com/questions/5114292/break-interrupt-a-time-sleep-in-python
 make Tkinter gui update somehow to reflect changes in network activity and updated start time and running status
-output results to file every week
+output results to file every week use backgroun scheduler
 make per second readings optional?
 
 '''
 
+
 class Monitor:
-    sched = BlockingScheduler()
+    sched = BackgroundScheduler()
     startTime = None
     endTime = None
     running = False
+    exit = Event()
     win = None
 
     def __init__(self, master):
@@ -44,6 +48,7 @@ class Monitor:
     def start(self):
         print("started")
         self.startrunning()
+        self.sched.add_job(self.printout, 'interval', days=7)
         self.main()
 
     def main(self):
@@ -51,8 +56,8 @@ class Monitor:
         try:
             print("run")
             interval = 0
-            print(self.running)
-            while self.running:
+            print(self.exit)
+            while not self.exit.is_set():
                 print("running")
                 args = self.poll(interval)
                 print(args)
@@ -65,7 +70,7 @@ class Monitor:
         tot_before = psutil.net_io_counters()
         pnic_before = psutil.net_io_counters(pernic=True)
         # sleep some time
-        time.sleep(interval)
+        self.exit.wait(interval)
         tot_after = psutil.net_io_counters()
         pnic_after = psutil.net_io_counters(pernic=True)
         return tot_before, tot_after, pnic_before, pnic_after
@@ -75,11 +80,18 @@ class Monitor:
 
     def printout(self):
         print("print")
+        file = open(datetime.datetime.now(), "w")
+        ''' write weekly variables'''
+        ''' think about changing output based on run status'''
+        file.close()
+        '''reset weekly variables'''
 
     def startrunning(self):
+        self.exit.clear()
         self.running = True
 
     def stoprunning(self):
+        self.exit.set()
         self.running = False
 
     def reset(self):
@@ -101,6 +113,7 @@ class Monitor:
         print(end_time)
         print(startTime)
 
+    ''' function sourced from https://github.com/giampaolo/psutil/blob/master/scripts/nettop.py'''
     def bytes2human(self, n):
         symbols = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
         prefix = {}
