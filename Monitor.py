@@ -11,6 +11,11 @@ make Tkinter gui update somehow to reflect changes in network activity and updat
 output results to file every week use backgroun scheduler
 make per second readings optional?
 
+use this so that the stop button actually works, eliminate while loop
+This project is harder than I fucking thought it would be
+and I can't test anything until I figure this out
+https://stackoverflow.com/questions/27050492/how-do-you-create-a-tkinter-gui-stop-button-to-break-an-infinite-loop
+
 '''
 
 
@@ -26,6 +31,7 @@ class Monitor:
     weeklydown = 0
     totalup = 0
     totaldown = 0
+    interval = 1000
 
     def __init__(self, master):
         self.job = self.sched.add_job(self.printout, 'interval', days=7)
@@ -85,6 +91,12 @@ class Monitor:
 
     def update(self, tot_before, tot_after, pnic_before, pnic_after, interval):
         print("refresh")
+        bytes_sent = tot_after.bytes_sent - tot_before.bytes_sent
+        bytes_recieved = tot_after.bytes_recieved - tot_before.bytes_recieved
+        self.weeklyup += bytes_sent
+        self.totalup += bytes_sent
+        self.weeklydown += bytes_recieved
+        self.totaldown += bytes_recieved
 
     def printout(self):
         print("print")
