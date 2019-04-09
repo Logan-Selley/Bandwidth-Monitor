@@ -1,7 +1,7 @@
 import datetime
 from tkinter import *
 import psutil
-from apscheduler.schedulers.blocking import BackgroundScheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 ''' Event code from https://stackoverflow.com/questions/5114292/break-interrupt-a-time-sleep-in-python'''
 from threading import Event
 '''
@@ -50,6 +50,7 @@ class Monitor:
 
         start_status = Label(self.win, text="Start Time: " + str(self.startTime))
         start_status.pack()
+        root.update()
 
     def start(self):
         print("started")
@@ -68,6 +69,7 @@ class Monitor:
                 print(args)
                 self.update(*args)
                 interval = 1
+                root.update()
         except (KeyboardInterrupt, SystemExit):
             pass
 
@@ -149,4 +151,3 @@ class Monitor:
 
 root = Tk()
 monitor = Monitor(root)
-root.mainloop()
