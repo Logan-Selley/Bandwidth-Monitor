@@ -27,6 +27,8 @@ class Monitor:
     exit = Event()
     win = None
     job = None
+    runlabel = None
+    startlabel = None
     weeklyup = 0
     weeklydown = 0
     totalup = 0
@@ -42,18 +44,24 @@ class Monitor:
         self.win = master
         self.win.title("Logan's Bandwidth Monitor")
         self.win.geometry("300x200")
+        self.runlabel = StringVar()
+        self.runlabel.set(str(self.running))
+        self.startlabel = StringVar()
+        self.startlabel.set(str(self.startTime))
         start_btn = Button(self.win, text='Start Monitoring', command=self.start)
         start_btn.pack()
 
         stop_btn = Button(self.win, text='Stop Monitoring', command=self.stoprunning)
         stop_btn.pack()
 
-        run_status = Label(self.win, text="Running?: " + str(self.running))
+        run = StringVar()
+        run.set(self.running)
+        run_status = Label(self.win, text="running?: ", textvariable=self.runlabel)
         run_status.pack()
 
-        start_status = Label(self.win, text="Start Time: " + str(self.startTime))
+        start_status = Label(self.win, text= "Start time: ", textvariable=self.startlabel)
         start_status.pack()
-        root.update()
+        root.mainloop()
 
     def start(self):
         print("started")
@@ -113,6 +121,7 @@ class Monitor:
         self.totaldown = 0
         self.totalup = 0
         self.running = True
+        self.runlabel.set(str(self.running))
 
     def stoprunning(self):
         self.exit.set()
@@ -120,6 +129,7 @@ class Monitor:
         self.end()
         self.exitprint()
         self.running = False
+        self.runlabel.set(str(self.running))
 
     def exitprint(self):
         print("exit print")
@@ -134,11 +144,13 @@ class Monitor:
         self.weeklyup = 0
         self.endTime = None
         self.startTime = None
+        self.startlabel.set(str(self.startTime))
 
         file.close()
 
     def updatestart(self):
         self.startTime = datetime.datetime.now()
+        self.startlabel.set(str(self.startTime))
 
     '''Does this function even do anything right now?'''
     def end(self):
@@ -159,5 +171,4 @@ class Monitor:
 
 root = Tk()
 monitor = Monitor(root)
-root.mainloop()
 
