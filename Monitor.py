@@ -48,9 +48,6 @@ class Monitor:
         stop_btn = Button(self.win, text='Stop Monitoring', command=self.stoprunning)
         stop_btn.pack()
 
-        reset_btn = Button(self.win, text="Reset", command=self.reset)
-        reset_btn.pack()
-
         run_status = Label(self.win, text="Running?: " + str(self.running))
         run_status.pack()
 
@@ -61,23 +58,19 @@ class Monitor:
     def start(self):
         print("started")
         self.startrunning()
-        self.main()
+        root.after(1, self.main)
 
     def main(self):
         print("main")
-        try:
-            print("run")
-            interval = 0
-            print(self.exit)
-            while not self.exit.is_set():
-                print("running")
-                args = self.poll(interval)
-                print(args)
-                self.update(*args)
-                interval = 1
-                root.update()
-        except (KeyboardInterrupt, SystemExit):
-            pass
+        print("run")
+        print(self.exit)
+        if not self.exit.is_set():
+            interval = 1
+            print("running")
+            args = self.poll(interval)
+            print(args)
+            self.update(*args)
+            root.after(1, self.main)
 
     ''' function sourced from https://github.com/giampaolo/psutil/blob/master/scripts/nettop.py'''
     def poll(self, interval):
@@ -90,19 +83,20 @@ class Monitor:
         return tot_before, tot_after, pnic_before, pnic_after, interval
 
     def update(self, tot_before, tot_after, pnic_before, pnic_after, interval):
-        print("refresh")
         bytes_sent = tot_after.bytes_sent - tot_before.bytes_sent
-        bytes_recieved = tot_after.bytes_recieved - tot_before.bytes_recieved
+        bytes_received = tot_after.bytes_recv - tot_before.bytes_recv
         self.weeklyup += bytes_sent
         self.totalup += bytes_sent
-        self.weeklydown += bytes_recieved
-        self.totaldown += bytes_recieved
+        self.weeklydown += bytes_received
+        self.totaldown += bytes_received
+        print(self.bytes2human(self.totalup))
+        print(self.bytes2human(self.totaldown))
 
     def printout(self):
         print("print")
-        file = open(str(datetime.datetime.now()), "w")
-        file.write("Week's Download: " + self.bytes2human(self.weeklydown))
-        file.write("Week's Upload: " + self.bytes2human(self.weeklyup))
+        file = open(str(datetime.datetime.today().strftime("%Y%m%d-%H%M%S")), "w")
+        file.write("Week's Download: " + self.bytes2human(self.weeklydown) + "\n")
+        file.write("Week's Upload: " + self.bytes2human(self.weeklyup) + "\n")
         self.weeklydown = 0
         self.weeklyup = 0
         ''' write weekly variables'''
@@ -111,6 +105,7 @@ class Monitor:
         '''reset weekly variables'''
 
     def startrunning(self):
+        self.updatestart()
         self.exit.clear()
         self.job.resume()
         self.weeklyup = 0
@@ -122,31 +117,32 @@ class Monitor:
     def stoprunning(self):
         self.exit.set()
         self.job.pause()
+        self.end()
         self.exitprint()
         self.running = False
 
     def exitprint(self):
         print("exit print")
-        '''total'''
+        file = open(str(datetime.datetime.today().strftime("%Y%m%d-%H%M%S")), "w")
+        file.write("Started: " + str(self.startTime) + "\n")
+        file.write("Ended: " + str(self.endTime) + "\n")
+        file.write("Total Download: " + self.bytes2human(self.totaldown) + "\n")
+        file.write("Total Upload: " + self.bytes2human(self.totalup) + "\n")
+        self.totaldown = 0
+        self.totalup = 0
+        self.weeklydown = 0
+        self.weeklyup = 0
+        self.endTime = None
+        self.startTime = None
 
-    def reset(self):
-        global startTime, endTime, running, win
-        startTime = None
-        endTime = None
-        running = False
-        win = None
-        return startTime, endTime, running, win
+        file.close()
 
     def updatestart(self):
-        global startTime
-        startTime = datetime.datetime.now()
-        return startTime
+        self.startTime = datetime.datetime.now()
 
+    '''Does this function even do anything right now?'''
     def end(self):
-        global startTime
-        end_time = datetime.datetime.now()
-        print(end_time)
-        print(startTime)
+        self.endTime = datetime.datetime.now()
 
     ''' function sourced from https://github.com/giampaolo/psutil/blob/master/scripts/nettop.py'''
     def bytes2human(self, n):
@@ -163,3 +159,5 @@ class Monitor:
 
 root = Tk()
 monitor = Monitor(root)
+root.mainloop()
+
