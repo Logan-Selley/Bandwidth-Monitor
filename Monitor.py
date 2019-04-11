@@ -6,16 +6,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from threading import Event
 '''
 TODO:
-change running boolean to python event: https://stackoverflow.com/questions/5114292/break-interrupt-a-time-sleep-in-python
-make Tkinter gui update somehow to reflect changes in network activity and updated start time and running status
-output results to file every week use backgroun scheduler
 make per second readings optional?
-
-use this so that the stop button actually works, eliminate while loop
-This project is harder than I fucking thought it would be
-and I can't test anything until I figure this out
-https://stackoverflow.com/questions/27050492/how-do-you-create-a-tkinter-gui-stop-button-to-break-an-infinite-loop
-
 '''
 
 
